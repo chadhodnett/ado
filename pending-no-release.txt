@@ -26,3 +26,5 @@ Found no release for nsbb 68539. - OD patch release was likely never created
 Found no release for nsbb 69463. - OD patch release was likely never created
 Found no release for nsbb 76189. - no matching changesets (pre-liquibase)
 Found no release for sheet 69463. - OD patch release was likely never created
+
+Release-152-3389 with status abandoned deleted on 2024-03-26
