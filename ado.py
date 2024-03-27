@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from azure.devops.v7_0.release.release_client import ReleaseClient
+from azure.devops.v7_0.release.models import Release, ReleaseUpdateMetadata
 
 PROJECT = "2d1ccb81-c104-4f43-9181-25603aff23ef"
 ACTIVE = "active"
@@ -28,12 +29,25 @@ def labels_without_releases(release_client: ReleaseClient, labels, release_defin
     return missing
 
 
+def get_matching_releases(release_client: ReleaseClient, labels, release_definition):
+    releases = []
+    for label in labels:
+        releases += release_client.get_releases(
+            project=PROJECT,
+            is_deleted=False,
+            status_filter=ACTIVE,
+            search_text=label,
+        )
+
+    return [r for r in releases if r.release_definition.id == release_definition]
+
+
 def get_recent_deleted_releases(release_client: ReleaseClient, release_definition):
     return [
         r
         for r in release_client.get_releases(
             project=PROJECT,
-            status_filter=ACTIVE,
+            # status_filter=ACTIVE,
             is_deleted=True,
         )
         if r.release_definition.id == release_definition
@@ -70,3 +84,14 @@ def get_stale_releases(
         if r.release_definition.id == release_definition
         and datetime.now(timezone.utc) - r.modified_on > timedelta(days=inactive_days)
     ]
+
+
+def keep_release(release_client: ReleaseClient, release: Release, preview=False):
+    if not release.keep_forever:
+        if preview:
+            print(f"Keep release {release.name}")
+        else:
+            data = ReleaseUpdateMetadata(keep_forever=True)
+            release_client.update_release_resource(
+                release_update_metadata=data, project=PROJECT, release_id=release.id
+            )
